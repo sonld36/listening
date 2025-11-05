@@ -39,7 +39,7 @@ development_status:
   # Epic 1: Project Foundation & Authentication
   epic-1: backlog
   1-1-initialize-monorepo-with-next-js-and-typescript: done
-  1-2-configure-postgresql-database-with-prisma-orm: backlog
+  1-2-configure-postgresql-database-with-prisma-orm: review
   1-3-implement-user-registration-flow: backlog
   1-4-implement-user-login-and-session-management: backlog
   1-5-create-basic-dashboard-layout: backlog
