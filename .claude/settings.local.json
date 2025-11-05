@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(printf:*)",
+      "Bash(\"e:\\personal\\listening\\CLAUDE.md\")",
+      "Bash(npx @kayvan/markdown-tree-parser:*)",
+      "Bash(pnpm create:*)",
+      "Bash(npx -y create-next-app@latest friends-dictation --typescript --tailwind --eslint --app --src-dir --import-alias \"@/*\" --no-git --turbopack)",
+      "Bash(pnpm install)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

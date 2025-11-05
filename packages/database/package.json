@@ -1,0 +1,16 @@
+{
+  "name": "@friends-dictation/database",
+  "version": "0.1.0",
+  "main": "./src/client.ts",
+  "types": "./src/client.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.19.0",
+    "prisma": "^6.19.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}
