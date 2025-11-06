@@ -24,6 +24,7 @@ export const authOptions: NextAuthOptions = {
           const validationResult = loginSchema.safeParse(credentials);
 
           if (!validationResult.success) {
+            // AUTH_INVALID_CREDENTIALS - Invalid format
             return null;
           }
 
@@ -35,6 +36,8 @@ export const authOptions: NextAuthOptions = {
           });
 
           if (!user) {
+            // AUTH_USER_NOT_FOUND - User doesn't exist
+            // Note: Return same generic error as password mismatch to prevent user enumeration
             return null;
           }
 
@@ -45,8 +48,12 @@ export const authOptions: NextAuthOptions = {
           );
 
           if (!isValidPassword) {
+            // AUTH_INVALID_CREDENTIALS - Wrong password
             return null;
           }
+
+          // TODO: Add rate limiting (5 attempts/minute per architecture)
+          // Consider implementing rate limiting middleware or using a service like Upstash Rate Limit
 
           // Return user object (will be encoded in JWT)
           return {

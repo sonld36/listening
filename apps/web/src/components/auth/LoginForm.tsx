@@ -4,13 +4,17 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { signIn } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { loginSchema, type LoginInput } from '@/lib/validation/auth.schema';
 
 export function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
+
+  // Show success message if redirected from registration
+  const isRegistered = searchParams.get('registered') === 'true';
 
   const {
     register,
@@ -50,6 +54,13 @@ export function LoginForm() {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      {/* Success message from registration */}
+      {isRegistered && (
+        <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded">
+          Account created successfully! Please sign in.
+        </div>
+      )}
+
       {/* Server Error */}
       {serverError && (
         <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded">
