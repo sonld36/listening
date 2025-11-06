@@ -1,0 +1,285 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>3</storyId>
+    <title>Implement User Registration Flow</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-06</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/stories/1-3-implement-user-registration-flow.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>a new user</asA>
+    <iWant>to create an account with email and password</iWant>
+    <soThat>my learning progress can be saved and accessed later</soThat>
+    <tasks>
+      - Task 1: Create registration page UI (AC: #1, #3)
+        - Create `/app/(auth)/signup/page.tsx` route
+        - Implement SignupForm component with email and password fields
+        - Add client-side validation with Zod schema
+        - Integrate React Hook Form for form state management
+        - Display validation errors inline with user-friendly messages
+
+      - Task 2: Implement registration API endpoint (AC: #1, #2, #4)
+        - Create `/api/auth/register/route.ts` API route handler
+        - Implement server-side validation using Zod
+        - Hash password with bcrypt (12 rounds per architecture)
+        - Check for duplicate email addresses before creating user
+        - Create new user record in database using Prisma
+        - Return standardized response format per API patterns
+
+      - Task 3: Integrate NextAuth.js credentials provider (AC: #1)
+        - Configure NextAuth.js with credentials provider
+        - Set up authentication callbacks for user validation
+        - Configure session strategy (JWT per architecture)
+        - Add environment variables for NEXTAUTH_SECRET and NEXTAUTH_URL
+
+      - Task 4: Implement error handling (AC: #3, #4)
+        - Handle duplicate email error with specific error code (AUTH_EMAIL_EXISTS)
+        - Validate email format (RFC 5322 compliant)
+        - Validate password requirements (min 8 chars, 1 uppercase, 1 number)
+        - Return appropriate error responses following API patterns
+
+      - Task 5: Implement post-registration flow (AC: #5)
+        - Redirect to login page after successful registration
+        - Display success message on login page
+        - Add link to login page from registration page
+        - Add link to registration page from login page
+
+      - Task 6: Testing (All ACs)
+        - Write unit tests for password hashing function
+        - Write unit tests for Zod validation schemas
+        - Write integration tests for `/api/auth/register` endpoint
+        - Test duplicate email rejection
+        - Test invalid input validation
+        - Test successful registration flow end-to-end
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    1. Given a visitor on the registration page, when they submit valid email and password, then a new user account is created in the database
+
+    2. And password is hashed using bcrypt before storage
+
+    3. And appropriate validation errors show for invalid inputs
+
+    4. And duplicate email addresses are rejected with clear message
+
+    5. And successful registration redirects to login page
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc path="docs/epics.md" title="Epic Breakdown" section="Story 1.3">
+        Story acceptance criteria and technical notes. Prerequisites: Story 1.2 (database configured). Technical notes: Implement NextAuth.js 4.x with credentials provider, use Zod for validation, create reusable form components with React Hook Form.
+      </doc>
+
+      <doc path="docs/architecture.md" title="Architecture Document" section="Security Architecture">
+        Authentication &amp; Authorization: NextAuth.js with JWT sessions, Password hashing with bcrypt (12 rounds), Session expiry: 30 days, Refresh token rotation. Data Protection: Input validation with Zod schemas. API Security: Rate limiting on auth endpoints (5 attempts/minute).
+      </doc>
+
+      <doc path="docs/architecture.md" title="Architecture Document" section="API Patterns">
+        Response Format: Success: { success: true, data: T }, Error: { success: false, error: { code: string, message: string } }. Error codes format: DOMAIN_ACTION_ERROR (e.g., AUTH_LOGIN_FAILED, AUTH_EMAIL_EXISTS).
+      </doc>
+
+      <doc path="docs/architecture.md" title="Architecture Document" section="Data Architecture">
+        User model: id (cuid), email (unique), password_hash, created_at, updated_at. Database naming: snake_case for tables/columns.
+      </doc>
+
+      <doc path="docs/PRD.md" title="Product Requirements Document" section="FR9">
+        System must have basic user account functionality (signup/login) to save progress, flashcards, and daily streaks.
+      </doc>
+
+      <doc path="docs/architecture.md" title="Architecture Document" section="Component Patterns">
+        Component structure: PascalCase naming, Props interface definition, Co-located tests. File organization: Components folder by domain (auth/, video/, etc.).
+      </doc>
+    </docs>
+
+    <code>
+      <artifact path="apps/web/src/lib/prisma.ts" kind="service" symbol="prisma" lines="1-22" reason="Singleton Prisma client for database operations - reuse for user creation">
+        Prisma client singleton with proper hot-reload handling. Use this for all database operations including user creation.
+      </artifact>
+
+      <artifact path="apps/web/prisma/schema.prisma" kind="schema" symbol="User" lines="15-23" reason="User model already defined with correct fields for registration">
+        User model with id (cuid), email (unique), passwordHash (password_hash), createdAt, updatedAt. Email has unique constraint.
+      </artifact>
+
+      <artifact path="apps/web/src/app/api/health/route.ts" kind="api-route" symbol="GET" lines="1-43" reason="Example of standardized API response format and error handling pattern">
+        Demonstrates correct API response format with success/error patterns, error code format (HEALTH_CHECK_FAILED), and NextResponse usage.
+      </artifact>
+
+      <artifact path="tests/setup.ts" kind="test-config" symbol="setup" lines="1-21" reason="Test environment setup with mocked environment variables">
+        Shows how to configure test environment variables including NEXTAUTH_URL and NEXTAUTH_SECRET for testing auth flows.
+      </artifact>
+
+      <artifact path="vitest.config.ts" kind="config" symbol="defineConfig" lines="1-30" reason="Vitest configuration with path aliases for testing">
+        Configured path aliases (@/, @/lib, @/app) for testing. Setup file at ./tests/setup.ts. Coverage enabled with v8 provider.
+      </artifact>
+    </code>
+
+    <dependencies>
+      <node>
+        <package name="next" version="16.0.1">Next.js framework with App Router</package>
+        <package name="react" version="19.2.0">React library</package>
+        <package name="next-auth" version="4.24.13">Authentication library with credentials provider support</package>
+        <package name="zod" version="^4.1.12">Schema validation library for client and server</package>
+        <package name="@prisma/client" version="latest">Prisma client for database operations</package>
+        <package name="bcryptjs" version="NOT_INSTALLED_YET">Password hashing library (need to install)</package>
+        <package name="react-hook-form" version="NOT_INSTALLED_YET">Form state management (need to install)</package>
+        <package name="@tanstack/react-query" version="^5.90.7">Server state management</package>
+        <package name="zustand" version="^5.0.8">Client state management</package>
+        <package name="@testing-library/react" version="^16.3.0">React testing utilities</package>
+        <package name="@testing-library/jest-dom" version="^6.9.1">DOM testing matchers</package>
+        <package name="vitest" version="^2.1.8">Unit testing framework</package>
+        <package name="@playwright/test" version="^1.49.1">E2E testing framework</package>
+      </node>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    - Use NextAuth.js 4.24.13 with credentials provider (no Auth.js v5)
+    - Hash passwords with bcrypt using 12 rounds (per architecture security standards)
+    - Implement JWT sessions with 30-day expiry (per architecture)
+    - Use Zod for both client-side and server-side validation
+    - Follow API response format: { success: boolean, data?: T, error?: { code, message } }
+    - Error codes must follow DOMAIN_ACTION_ERROR pattern (AUTH_EMAIL_EXISTS, AUTH_INVALID_INPUT)
+    - Email validation must be RFC 5322 compliant
+    - Password requirements: minimum 8 characters, at least 1 uppercase letter, at least 1 number
+    - Use React Hook Form for form state management
+    - Follow architecture naming conventions: PascalCase for components, camelCase for utilities
+    - Database operations must use the singleton Prisma client from apps/web/src/lib/prisma.ts
+    - User model uses snake_case mapping (password_hash, created_at, updated_at in database)
+    - Email field has @unique constraint - will throw Prisma error on duplicate
+    - Environment variables required: NEXTAUTH_SECRET, NEXTAUTH_URL, DATABASE_URL, DIRECT_URL
+    - Rate limiting on auth endpoints: 5 attempts per minute (to be implemented in future story)
+    - All tests must follow Vitest configuration with path aliases
+    - Mock Prisma client in unit tests, use real test database for integration tests
+  </constraints>
+
+  <interfaces>
+    <interface name="User (Prisma Model)" kind="database-model" path="apps/web/prisma/schema.prisma">
+      <signature>
+        model User {
+          id           String   @id @default(cuid())
+          email        String   @unique
+          passwordHash String   @map("password_hash")
+          createdAt    DateTime @default(now()) @map("created_at")
+          updatedAt    DateTime @updatedAt @map("updated_at")
+          @@map("users")
+        }
+      </signature>
+    </interface>
+
+    <interface name="POST /api/auth/register" kind="api-endpoint" path="apps/web/src/app/api/auth/register/route.ts">
+      <signature>
+        Request Body: {
+          email: string;     // RFC 5322 compliant
+          password: string;  // Min 8 chars, 1 uppercase, 1 number
+        }
+
+        Success Response (201): {
+          success: true;
+          data: {
+            user: { id: string; email: string; createdAt: string };
+            message: string;
+          }
+        }
+
+        Error Response (400/409): {
+          success: false;
+          error: {
+            code: "AUTH_EMAIL_EXISTS" | "AUTH_INVALID_INPUT";
+            message: string;
+          }
+        }
+      </signature>
+    </interface>
+
+    <interface name="NextAuth Configuration" kind="auth-config" path="apps/web/src/app/api/auth/[...nextauth]/route.ts">
+      <signature>
+        NextAuth({
+          providers: [
+            CredentialsProvider({
+              credentials: { email, password },
+              authorize: async (credentials) => {
+                // Verify user credentials
+                // Return user object or null
+              }
+            })
+          ],
+          session: { strategy: "jwt", maxAge: 30 * 24 * 60 * 60 },
+          callbacks: { jwt, session },
+          pages: { signIn: '/login', signUp: '/signup' }
+        })
+      </signature>
+    </interface>
+
+    <interface name="Zod Validation Schema" kind="validation-schema" path="apps/web/src/lib/validation/auth.schema.ts">
+      <signature>
+        import { z } from 'zod';
+
+        export const signupSchema = z.object({
+          email: z.string().email("Invalid email format"),
+          password: z.string()
+            .min(8, "Password must be at least 8 characters")
+            .regex(/[A-Z]/, "Password must contain uppercase letter")
+            .regex(/[0-9]/, "Password must contain number")
+        });
+
+        export type SignupInput = z.infer&lt;typeof signupSchema&gt;;
+      </signature>
+    </interface>
+
+    <interface name="Password Utilities" kind="utility-functions" path="apps/web/src/lib/auth/password.ts">
+      <signature>
+        import bcrypt from 'bcryptjs';
+
+        export async function hashPassword(password: string): Promise&lt;string&gt; {
+          return bcrypt.hash(password, 12); // 12 rounds per architecture
+        }
+
+        export async function verifyPassword(
+          password: string,
+          hashedPassword: string
+        ): Promise&lt;boolean&gt; {
+          return bcrypt.compare(password, hashedPassword);
+        }
+      </signature>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Testing framework: Vitest for unit tests, Playwright for E2E tests.
+      Test location: tests/unit/ for unit tests, tests/integration/ for integration tests, tests/e2e/ for E2E tests.
+      Mock strategy: Mock Prisma client for unit tests using vi.mock(), use real test database for integration tests.
+      Coverage: Enabled with v8 provider, reports in text/json/html formats.
+      Path aliases configured: @/, @/lib, @/app for consistent imports in tests.
+      Environment setup: tests/setup.ts provides mocked environment variables for NEXTAUTH_URL, NEXTAUTH_SECRET, DATABASE_URL.
+    </standards>
+
+    <locations>
+      - tests/unit/lib/auth/*.test.ts (password hashing utilities)
+      - tests/unit/validation/*.test.ts (Zod schema validation)
+      - tests/integration/api/auth/*.test.ts (registration API endpoint)
+      - tests/e2e/auth/*.spec.ts (full registration flow)
+    </locations>
+
+    <ideas>
+      - AC #1: Test successful user creation with valid email and password (integration test against /api/auth/register)
+      - AC #2: Test password is hashed before storage - verify passwordHash field is not plain text (unit test for hashPassword function)
+      - AC #2: Test bcrypt hash verification works correctly (unit test for verifyPassword function)
+      - AC #3: Test validation errors for invalid email format (unit test for Zod schema)
+      - AC #3: Test validation errors for weak passwords (unit test for Zod schema)
+      - AC #3: Test validation errors display correctly in UI (E2E test)
+      - AC #4: Test duplicate email rejection returns AUTH_EMAIL_EXISTS error code (integration test)
+      - AC #4: Test Prisma unique constraint error is caught and handled (integration test)
+      - AC #5: Test successful registration redirects to /login page (E2E test)
+      - AC #5: Test success message appears on login page after registration (E2E test)
+      - General: Test API response format matches architecture standard (integration test)
+      - General: Test NextAuth credentials provider configuration (integration test)
+      - General: Test form submission with React Hook Form (component test)
+    </ideas>
+  </tests>
+</story-context>
