@@ -2,12 +2,14 @@ import NextAuth, { type NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { loginSchema } from '@/lib/validation/auth.schema';
 import { verifyPassword } from '@/lib/auth/password';
+import { checkRateLimit, resetRateLimit } from '@/lib/auth/rate-limiter';
 import prisma from '@/lib/prisma';
 
 /**
  * NextAuth configuration
  * - Credentials provider for email/password authentication
  * - JWT session strategy with 30-day expiry
+ * - Rate limiting: 5 attempts per minute per email
  * - Custom pages for sign in and sign up
  */
 export const authOptions: NextAuthOptions = {
@@ -29,6 +31,15 @@ export const authOptions: NextAuthOptions = {
           }
 
           const { email, password } = validationResult.data;
+
+          // Rate limiting: Check if email has exceeded attempts (5 per minute)
+          const rateLimitResult = checkRateLimit(email);
+          if (!rateLimitResult.allowed) {
+            console.warn(`Rate limit exceeded for email: ${email}`);
+            // AUTH_RATE_LIMIT_EXCEEDED
+            // Note: Return null to maintain consistent error response
+            return null;
+          }
 
           // Find user by email
           const user = await prisma.user.findUnique({
@@ -52,8 +63,8 @@ export const authOptions: NextAuthOptions = {
             return null;
           }
 
-          // TODO: Add rate limiting (5 attempts/minute per architecture)
-          // Consider implementing rate limiting middleware or using a service like Upstash Rate Limit
+          // Successful login - reset rate limit for this email
+          resetRateLimit(email);
 
           // Return user object (will be encoded in JWT)
           return {

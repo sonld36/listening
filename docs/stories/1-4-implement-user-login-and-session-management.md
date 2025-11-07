@@ -332,3 +332,271 @@ claude-sonnet-4-5-20250929
 - apps/web/src/lib/validation/auth.schema.ts (loginSchema)
 - apps/web/src/lib/auth/password.ts (verifyPassword)
 - apps/web/src/app/api/auth/[...nextauth]/route.ts (authorize, jwt, session callbacks)
+
+## Senior Developer Review (AI)
+
+**Reviewer:** sonld
+**Date:** 2025-11-06
+**Review Model:** claude-sonnet-4-5-20250929
+
+### Outcome
+
+**CHANGES REQUESTED** ⚠️
+
+**Justification:** All acceptance criteria are implemented correctly, but testing is incomplete (Task 8 falsely marked complete with missing E2E tests) and Zustand session sync is not implemented (Task 4 incomplete). These are MEDIUM severity issues that must be addressed before approval.
+
+### Summary
+
+Story 1.4 implements a solid foundation for user login and session management using NextAuth.js with proper security practices. The core authentication flow is complete and secure with:
+- ✅ Secure credential verification with bcrypt (12 rounds)
+- ✅ JWT sessions with 30-day expiry
+- ✅ Route protection middleware
+- ✅ Proper error handling with generic messages (prevents user enumeration)
+- ✅ Comprehensive unit tests (23 tests passing)
+
+However, two MEDIUM severity issues prevent approval:
+1. **Task 8 falsely marked complete** - Claims E2E tests exist but they don't
+2. **Task 4 incomplete** - Zustand session sync not implemented despite being marked complete
+
+### Key Findings
+
+**MEDIUM Severity:**
+1. **[Task 8] E2E tests missing** - Task claims "Test successful login flow end-to-end", "Test session persistence across page refresh", "Test middleware route protection", "Test logout functionality" but NO E2E tests exist for Story 1.4. Only E2E tests found are for Story 1.3 (registration). Integration tests for NextAuth authorize callback also missing.
+   - **Evidence**: `tests/e2e/` only contains `example.spec.ts` and `auth/registration.spec.ts`
+   - **Impact**: No verification that the complete login flow works from user perspective
+   - **File**: Missing `tests/e2e/auth/login.spec.ts`
+
+2. **[Task 4] Zustand session sync not implemented** - Task marked complete but subtask "Sync NextAuth session with Zustand store on app load" is noted as "Ready for integration" but NOT DONE. No code exists that syncs NextAuth session data into Zustand on application load.
+   - **Evidence**: `stores/authStore.ts:1-39` - Store exists but no integration code. Dashboard uses `useSession()` directly, not Zustand.
+   - **Impact**: Redundant state management - either use NextAuth session OR Zustand, but currently they're disconnected
+   - **File**: Missing sync logic in `app/layout.tsx` or `app/providers.tsx`
+
+**LOW Severity:**
+3. **Rate limiting not implemented** - Architecture requires 5 attempts/minute but only noted as TODO
+   - **Evidence**: `route.ts:55-56` - TODO comment
+   - **Impact**: Security vulnerability - brute force attacks possible
+   - **Note**: This was acknowledged as "future enhancement" so not blocking
+
+**POSITIVE FINDINGS:**
+- ✅ Security best practice: Generic error messages prevent user enumeration
+- ✅ Proper bcrypt configuration (12 rounds as per architecture)
+- ✅ JWT sessions properly configured with 30-day expiry
+- ✅ Comprehensive unit tests (9 validation + 8 store + 6 password tests)
+- ✅ Integration tests for LoginForm component (9 tests)
+- ✅ Clean separation of concerns (validation, auth logic, UI)
+- ✅ TypeScript types properly extended for NextAuth
+- ✅ Middleware correctly protects routes
+- ✅ LogoutButton successfully integrated in AppNav (Story 1.5)
+
+### Acceptance Criteria Coverage
+
+| AC# | Description | Status | Evidence |
+|-----|-------------|--------|----------|
+| AC #1 | Secure session created with valid credentials | ✅ IMPLEMENTED | `route.ts:21-67` (authorize), `route.ts:70-72` (JWT session), `route.ts:79-94` (callbacks), `LoginForm.tsx:32-41` (signIn) |
+| AC #2 | Invalid credentials show error messages | ✅ IMPLEMENTED | `route.ts:24-29,38-42,45-53` (error handling), `LoginForm.tsx:38-40,65-69` (UI error display) |
+| AC #3 | Session persists across page refreshes | ✅ IMPLEMENTED | `route.ts:70-72` (30-day JWT), `route.ts:79-94` (session callbacks maintain data) |
+| AC #4 | Protected routes redirect when unauthenticated | ✅ IMPLEMENTED | `middleware.ts:10-14,16-22` (withAuth + route matcher) |
+| AC #5 | Logout clears session completely | ✅ IMPLEMENTED | `LogoutButton.tsx:27-46` (logout handler), integrated in `AppNav.tsx:86,167` |
+
+**Summary:** 5 of 5 acceptance criteria fully implemented ✅
+
+### Task Completion Validation
+
+| Task | Marked As | Verified As | Evidence |
+|------|-----------|-------------|----------|
+| Task 1: Create login page UI | ✅ Complete | ✅ VERIFIED | All subtasks verified: `login/page.tsx`, `LoginForm.tsx:1-128`, Zod validation, React Hook Form, inline errors |
+| Task 2: NextAuth configuration | ✅ Complete | ✅ VERIFIED | All subtasks verified: `route.ts:21-67` (authorize + bcrypt + Prisma + error handling) |
+| Task 3: Session persistence | ✅ Complete | ✅ VERIFIED | Implementation complete: `route.ts:79-94` (callbacks), `route.ts:72` (30-day expiry) |
+| Task 4: Zustand auth store | ✅ Complete | ⚠️ PARTIAL | Store created (`authStore.ts:1-39`) but **session sync NOT implemented** - marked as "Ready for integration" |
+| Task 5: Route protection middleware | ✅ Complete | ✅ VERIFIED | All subtasks verified: `middleware.ts:1-23` (withAuth + matchers) |
+| Task 6: Logout functionality | ✅ Complete | ✅ VERIFIED | Component created (`LogoutButton.tsx:1-66`) and **integrated in AppNav** (`AppNav.tsx:86,167`) |
+| Task 7: Error handling | ✅ Complete | ✅ VERIFIED | All error codes documented, generic messages implemented, rate limiting TODO noted |
+| Task 8: Testing | ✅ Complete | ❌ **FALSE COMPLETION** | Unit tests complete (23 tests), LoginForm integration tests exist (9 tests), but **E2E tests completely missing** |
+
+**Summary:** 6 of 8 tasks fully verified, 1 partial (Task 4), 1 false completion (Task 8) ⚠️
+
+**CRITICAL ISSUES:**
+- **Task 8 marked complete but E2E tests missing** - No tests for: login flow E2E, session persistence, middleware protection, logout flow
+- **Task 4 marked complete but Zustand sync missing** - Session sync between NextAuth and Zustand not implemented
+
+### Test Coverage and Gaps
+
+**Unit Tests: ✅ EXCELLENT**
+- ✅ Login validation schema: 5 tests (`auth.schema.test.ts:6-62`)
+- ✅ Signup validation schema: 4 tests (`auth.schema.test.ts:65-110`)
+- ✅ Auth store: 8 tests covering all actions (`authStore.test.ts:1-97`)
+- ✅ Password utilities: 6 tests (`password.test.ts:1-60`)
+- **Total: 23 unit tests** ✅
+
+**Integration Tests: ⚠️ PARTIAL**
+- ✅ LoginForm component: 9 tests (`LoginForm.test.tsx:1-161`)
+- ❌ **MISSING**: NextAuth authorize callback integration tests
+- ❌ **MISSING**: Session callback integration tests
+- ❌ **MISSING**: Middleware integration tests
+
+**E2E Tests: ❌ COMPLETELY MISSING**
+- ❌ **MISSING**: Login flow E2E test (fill form → submit → dashboard redirect)
+- ❌ **MISSING**: Session persistence test (login → refresh page → verify session)
+- ❌ **MISSING**: Middleware protection test (access protected route → redirect to login)
+- ❌ **MISSING**: Logout flow test (logout → clear session → redirect)
+- ❌ **MISSING**: Invalid credentials test (submit wrong password → show error)
+
+**Gap Analysis:**
+Task 8 claims these tests exist but they don't. The story completion notes say "38 tests passing successfully" but this only includes unit tests, not the required E2E tests for validating the complete user flows.
+
+### Architectural Alignment
+
+**✅ Architecture Compliance:**
+- NextAuth.js 4.24.13 with JWT sessions ✅
+- bcrypt with 12 rounds ✅
+- 30-day session expiry ✅
+- Error code pattern (AUTH_*) ✅
+- Protected routes correctly defined ✅
+- Middleware-based protection ✅
+- Generic error messages (security best practice) ✅
+
+**⚠️ Architecture Gaps:**
+- Rate limiting not implemented (5 attempts/minute per architecture) - Noted as TODO
+- Zustand session sync not implemented (architecture shows TanStack Query + Zustand separation)
+
+**Tech Stack Detected:**
+- Next.js 15.x with App Router
+- React 19.x
+- TypeScript 5.x
+- NextAuth.js 4.24.13
+- Prisma 5.x with PostgreSQL
+- Zustand 5.x
+- Vitest + Playwright
+- React Hook Form + Zod
+
+### Security Notes
+
+**✅ Security Strengths:**
+1. **Password Security:** bcrypt with 12 rounds (industry standard)
+2. **User Enumeration Prevention:** Generic error messages for invalid credentials
+3. **JWT Security:** 30-day expiry, properly signed tokens
+4. **Route Protection:** Middleware prevents unauthorized access
+5. **Input Validation:** Zod schemas on both client and server
+6. **Session Management:** Secure JWT strategy, httpOnly cookies (NextAuth default)
+
+**⚠️ Security Concerns:**
+1. **Rate Limiting Missing:** No protection against brute force login attempts (architecture requires 5 attempts/minute)
+   - **Recommendation:** Implement Upstash Rate Limit or similar before production
+2. **Error Logging:** Authorization errors logged to console (`route.ts:64`) - ensure no sensitive data in logs
+3. **Password Requirements:** No minimum length for login (only signup enforces 8+ chars) - this is acceptable for UX but note for security awareness
+
+**Best Practices Verification:**
+- ✅ TypeScript strict mode enabled
+- ✅ Server-side validation (not just client-side)
+- ✅ Proper error boundaries
+- ✅ Loading states handled
+- ✅ Prisma client singleton pattern
+
+### Best-Practices and References
+
+**Next.js 15 & React 19:**
+- ✅ App Router patterns followed correctly
+- ✅ Server Components used where appropriate (`login/page.tsx`)
+- ✅ Client Components marked with 'use client' directive
+- ✅ useSession() for client-side session access
+- Reference: [Next.js Authentication Docs](https://nextjs.org/docs/app/building-your-application/authentication)
+
+**NextAuth.js 4.24.13:**
+- ✅ Credentials provider properly configured
+- ✅ JWT callbacks correctly implement token enrichment
+- ✅ Session callbacks properly typed
+- ✅ Custom pages configuration
+- Reference: [NextAuth.js Credentials Provider](https://next-auth.js.org/providers/credentials)
+- Reference: [NextAuth.js Callbacks](https://next-auth.js.org/configuration/callbacks)
+
+**Testing Best Practices:**
+- ✅ Unit tests use mocking appropriately
+- ✅ Integration tests mock external dependencies (NextAuth, router)
+- ✅ Test isolation with beforeEach cleanup
+- ❌ **MISSING**: E2E tests with Playwright for user flows
+- Reference: [Playwright Best Practices](https://playwright.dev/docs/best-practices)
+
+**Security Best Practices:**
+- ✅ OWASP: Generic error messages implemented
+- ✅ OWASP: Password hashing with bcrypt
+- ⚠️ OWASP: Rate limiting recommended but not implemented
+- Reference: [OWASP Authentication Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html)
+
+### Action Items
+
+**Code Changes Required:**
+
+- [x] [Med] Implement Zustand-NextAuth session sync (Task 4) [file: apps/web/src/app/layout.tsx or app/providers.tsx]
+  - ✅ Created SessionSyncProvider component that syncs NextAuth session with Zustand
+  - ✅ Created Providers wrapper with SessionProvider + SessionSyncProvider
+  - ✅ Integrated in root layout.tsx
+  - ✅ Session automatically syncs on authentication state changes
+
+- [x] [Med] Create E2E test for login flow (Task 8) [file: tests/e2e/auth/login.spec.ts]
+  - ✅ Test: Fill form → submit → redirect to dashboard → verify authenticated
+  - ✅ Test: Invalid credentials → show error message
+  - ✅ Test: Session persistence → login → refresh page → still authenticated
+  - ✅ 9 comprehensive E2E tests created
+
+- [x] [Med] Create E2E test for middleware route protection (Task 8) [file: tests/e2e/auth/middleware.spec.ts]
+  - ✅ Test: Access /dashboard unauthenticated → redirect to /login
+  - ✅ Test: Access /dashboard authenticated → allow access
+  - ✅ Test: Logout → verify cannot access protected routes
+  - ✅ Tests for callback URL preservation and session expiry
+
+- [x] [Med] Create E2E test for logout flow (Task 8) [file: tests/e2e/auth/logout.spec.ts]
+  - ✅ Test: Login → logout → redirect to /login → verify session cleared
+  - ✅ Test: Logout → try accessing protected route → redirect to /login
+  - ✅ Test: Cookie clearing and Zustand store cleanup
+  - ✅ 9 comprehensive logout tests including mobile menu
+
+- [x] [Med] Create integration tests for NextAuth authorize callback (Task 8) [file: tests/integration/api/auth/authorize.test.ts]
+  - ✅ Test: Valid credentials → returns user object
+  - ✅ Test: Invalid email → returns null
+  - ✅ Test: User not found → returns null
+  - ✅ Test: Wrong password → returns null
+  - ✅ Test: User enumeration prevention (security)
+  - ✅ Test: Error handling and edge cases
+
+- [x] [Low] Implement rate limiting on login endpoint (Architecture requirement) [file: apps/web/src/app/api/auth/[...nextauth]/route.ts]
+  - ✅ Created in-memory rate limiter: 5 attempts/minute per email
+  - ✅ Integrated into authorize callback with automatic cleanup
+  - ✅ Successful login resets rate limit counter
+  - ✅ Generic error response maintains security (no 429 exposed to client)
+  - ✅ Architecture requirement fulfilled (upgradeable to Redis/Upstash later)
+
+**Advisory Notes:**
+
+- Note: Consider extracting session sync logic into a custom hook like `useSessionSync()` for reusability
+- Note: E2E tests should use Playwright's built-in authentication state saving to avoid redundant login flows
+- Note: When implementing rate limiting, ensure it doesn't block legitimate users (consider exponential backoff)
+- Note: Current implementation correctly uses NextAuth for session management - Zustand store may be redundant unless needed for offline state or specific client-side optimizations
+- Note: Error logging in authorize callback should be reviewed for production - consider structured logging with sanitized data
+- Note: Consider adding a "Forgot Password" flow in future stories (not required for this story)
+
+## Change Log
+
+**2025-11-06 - v1.2 - Review Issues Fixed**
+- ✅ ALL 6 action items from code review COMPLETED
+- ✅ Implemented Zustand-NextAuth session sync (SessionSyncProvider + Providers)
+- ✅ Created 27 new E2E tests (login: 9, middleware: 14, logout: 9)
+- ✅ Created 11 integration tests for NextAuth authorize callback
+- ✅ Implemented rate limiting (5 attempts/minute per email)
+- Files created:
+  - apps/web/src/components/providers/SessionSyncProvider.tsx
+  - apps/web/src/components/providers/Providers.tsx
+  - apps/web/src/lib/auth/rate-limiter.ts
+  - tests/e2e/auth/login.spec.ts (9 tests)
+  - tests/e2e/auth/middleware.spec.ts (14 tests)
+  - tests/e2e/auth/logout.spec.ts (9 tests)
+  - tests/integration/api/auth/authorize.test.ts (11 tests)
+- Files modified:
+  - apps/web/src/app/layout.tsx (added Providers wrapper)
+  - apps/web/src/app/api/auth/[...nextauth]/route.ts (added rate limiting)
+- Status: ready for re-review
+
+**2025-11-06 - v1.1 - Senior Developer Review**
+- Senior Developer Review notes appended
+- Outcome: Changes Requested (MEDIUM severity issues)
+- Action items added: 6 code changes required (5 Medium, 1 Low severity)
+- Status remains: review (pending changes)
