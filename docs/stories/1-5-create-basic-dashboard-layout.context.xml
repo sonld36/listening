@@ -1,0 +1,224 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>5</storyId>
+    <title>Create Basic Dashboard Layout</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-06</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/stories/1-5-create-basic-dashboard-layout.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>a logged-in user</asA>
+    <iWant>to see a dashboard after login</iWant>
+    <soThat>I can navigate to different features of the application</soThat>
+    <tasks>
+      - Task 1: Create dashboard page route (AC: #1)
+      - Task 2: Display user information (AC: #2)
+      - Task 3: Create navigation menu (AC: #3)
+      - Task 4: Integrate logout functionality (AC: #4)
+      - Task 5: Implement responsive layout (AC: #5)
+      - Task 6: Create dashboard content area (AC: #3)
+      - Task 7: Testing (All ACs)
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    1. Given an authenticated user, when they log in successfully, then they are redirected to the dashboard page
+    2. And dashboard displays user's name/email from session
+    3. And navigation menu includes links for future features (placeholder)
+    4. And logout button is visible and functional
+    5. And responsive layout works on mobile and desktop
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/epics.md</path>
+        <title>Epic Breakdown</title>
+        <section>Story 1.5: Create Basic Dashboard Layout</section>
+        <snippet>Dashboard displays user name/email, navigation menu with placeholder links, logout button, and responsive layout for mobile and desktop. Redirects to dashboard after successful login.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>Project Structure</section>
+        <snippet>Dashboard page location: apps/web/src/app/(app)/dashboard/page.tsx. Route group (app) for authenticated pages. Component naming: PascalCase, folders: kebab-case.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>Component Patterns</section>
+        <snippet>Components use PascalCase (VideoPlayer.tsx), organized in feature folders. Import order: React/Next.js, third-party, local aliases, relative imports, types.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>Technology Stack Details</section>
+        <snippet>Next.js 15 with App Router, React 19, TypeScript 5.x, Tailwind CSS 3.4, NextAuth.js 4.24.13 for authentication, Zustand v4 for client state.</snippet>
+      </doc>
+      <doc>
+        <path>docs/PRD.md</path>
+        <title>Product Requirements Document</title>
+        <section>Core Screens</section>
+        <snippet>Dashboard (Core Screen 2): Main screen after login. Displays collection of learning clips, overall progress (FR8), and daily learning streak (FR8).</snippet>
+      </doc>
+      <doc>
+        <path>docs/PRD.md</path>
+        <title>Product Requirements Document</title>
+        <section>UI Design Goals - Branding</section>
+        <snippet>Primary color: Light green. Responsive web design for desktop, tablet, and mobile.</snippet>
+      </doc>
+      <doc>
+        <path>docs/stories/1-4-implement-user-login-and-session-management.md</path>
+        <title>Previous Story - Login and Session Management</title>
+        <section>Dev Agent Record - Completion Notes</section>
+        <snippet>LogoutButton component created with button/link variants. Zustand auth store provides useAuth hook. Middleware protects /dashboard route. Session data includes user.id, user.email, user.created_at with 30-day expiry.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>apps/web/src/components/auth/LogoutButton.tsx</path>
+        <kind>component</kind>
+        <symbol>LogoutButton</symbol>
+        <lines>1-66</lines>
+        <reason>Fully functional logout component created in Story 1.4. Supports 'button' and 'link' variants. Integrates NextAuth signOut and Zustand clearUser. Ready for immediate use in dashboard navigation.</reason>
+      </artifact>
+      <artifact>
+        <path>apps/web/src/stores/authStore.ts</path>
+        <kind>store</kind>
+        <symbol>useAuthStore, useAuth</symbol>
+        <lines>1-39</lines>
+        <reason>Zustand auth store for client-side state management. Provides useAuth hook with setUser, clearUser, updateUser actions. Optional convenience layer over NextAuth session.</reason>
+      </artifact>
+      <artifact>
+        <path>apps/web/src/middleware.ts</path>
+        <kind>middleware</kind>
+        <symbol>withAuth</symbol>
+        <lines>1-23</lines>
+        <reason>NextAuth middleware protecting /dashboard, /learn, /flashcards routes. Dashboard already protected - automatic redirect to /login for unauthenticated users with callbackUrl preservation.</reason>
+      </artifact>
+      <artifact>
+        <path>apps/web/src/app/layout.tsx</path>
+        <kind>layout</kind>
+        <symbol>RootLayout</symbol>
+        <lines>1-35</lines>
+        <reason>Root layout with Geist fonts and global CSS. Reference for creating nested layouts. Dashboard may need (app) layout wrapper for shared navigation.</reason>
+      </artifact>
+      <artifact>
+        <path>apps/web/src/app/(auth)/login/page.tsx</path>
+        <kind>page</kind>
+        <symbol>LoginPage</symbol>
+        <lines>n/a</lines>
+        <reason>Login page that redirects to dashboard after successful authentication. Reference for route group structure (auth) vs (app).</reason>
+      </artifact>
+      <artifact>
+        <path>apps/web/src/app/api/auth/[...nextauth]/route.ts</path>
+        <kind>api-route</kind>
+        <symbol>NextAuth handlers</symbol>
+        <lines>n/a</lines>
+        <reason>NextAuth configuration with session and JWT callbacks. Session data structure: user.id, user.email, user.created_at. Used by useSession hook.</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <node>
+        <package name="next" version="16.0.1" />
+        <package name="react" version="19.2.0" />
+        <package name="react-dom" version="19.2.0" />
+        <package name="next-auth" version="4.24.13" />
+        <package name="zustand" version="5.0.8" />
+        <package name="tailwindcss" version="4" />
+        <package name="typescript" version="5" />
+        <package name="@tanstack/react-query" version="5.90.7" />
+      </node>
+      <devDependencies>
+        <package name="@playwright/test" version="^1.49.1" />
+        <package name="vitest" version="^2.1.8" />
+        <package name="@testing-library/react" version="^16.3.0" />
+        <package name="@testing-library/jest-dom" version="^6.9.1" />
+      </devDependencies>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    - Dashboard page MUST be created at: apps/web/src/app/(app)/dashboard/page.tsx
+    - Use NextAuth useSession() hook as primary method for accessing session data
+    - Zustand auth store is optional - use for client-side convenience if needed
+    - Follow mobile-first responsive design with Tailwind CSS breakpoints (sm:, md:, lg:, xl:)
+    - Primary color is light green (from PRD branding guidelines)
+    - Component files use PascalCase naming (AppNav.tsx, DashboardLayout.tsx)
+    - Route is already protected by middleware - no additional auth checks needed
+    - Navigation should be reusable across all authenticated pages (foundation for Epic 2+)
+    - Use Next.js Link component for client-side navigation
+    - Accessibility: Touch targets min 44x44px, keyboard navigation support
+    - Placeholder links should be marked as "Coming Soon" or disabled state
+    - Testing: Unit tests for components, integration tests for session integration, E2E tests for full user journey
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>useSession</name>
+      <kind>React Hook (NextAuth)</kind>
+      <signature>
+        const { data: session, status } = useSession();
+        // session.user.id: string
+        // session.user.email: string
+        // session.user.created_at: Date
+        // status: "loading" | "authenticated" | "unauthenticated"
+      </signature>
+      <path>next-auth/react</path>
+    </interface>
+    <interface>
+      <name>useAuth</name>
+      <kind>React Hook (Zustand)</kind>
+      <signature>
+        const { user, setUser, clearUser, updateUser } = useAuth();
+        // user: { id: string, email: string } | null
+        // setUser: (user: User | null) => void
+        // clearUser: () => void
+        // updateUser: (updates: Partial&lt;User&gt;) => void
+      </signature>
+      <path>apps/web/src/stores/authStore.ts</path>
+    </interface>
+    <interface>
+      <name>LogoutButton</name>
+      <kind>React Component</kind>
+      <signature>
+        &lt;LogoutButton
+          className?: string
+          variant?: 'button' | 'link'
+        /&gt;
+        // Handles NextAuth signOut + Zustand clearUser
+        // Redirects to /login after logout
+      </signature>
+      <path>apps/web/src/components/auth/LogoutButton.tsx</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Testing framework: Vitest for unit/integration tests, Playwright for E2E tests. Test files co-located with components or in tests/ directory. Use @testing-library/react for component testing. Mock NextAuth session with custom providers. Follow AAA pattern (Arrange, Act, Assert). Testing locations: tests/unit/, tests/integration/, tests/e2e/.
+    </standards>
+    <locations>
+      - tests/unit/ (unit tests)
+      - tests/integration/ (integration tests)
+      - tests/e2e/ (end-to-end tests with Playwright)
+    </locations>
+    <ideas>
+      - AC#1: Test authenticated user is redirected to /dashboard after login (E2E)
+      - AC#1: Test unauthenticated user cannot access /dashboard (redirects to /login) (E2E)
+      - AC#2: Test dashboard displays user email from session (integration)
+      - AC#2: Test loading state while session is fetching (unit)
+      - AC#3: Test navigation menu renders all placeholder links (unit)
+      - AC#3: Test navigation link states (active, disabled, coming soon) (unit)
+      - AC#4: Test logout button is visible and clickable (unit)
+      - AC#4: Test logout button redirects to /login (E2E)
+      - AC#5: Test responsive layout at mobile (320px), tablet (768px), desktop (1024px) breakpoints (unit)
+      - AC#5: Test hamburger menu appears on mobile (unit)
+      - Integration: Test NextAuth useSession hook integration in dashboard
+      - Integration: Test middleware protection for dashboard route
+      - E2E: Test complete flow: login → dashboard display → logout
+    </ideas>
+  </tests>
+</story-context>
