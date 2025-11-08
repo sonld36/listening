@@ -1,0 +1,344 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>2</epicId>
+    <storyId>2</storyId>
+    <title>Create Video Clip Management API</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-08</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/stories/2-2-create-video-clip-management-api.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>a developer</asA>
+    <iWant>API endpoints to manage video clips and their metadata</iWant>
+    <soThat>the frontend can retrieve available clips and their associated data</soThat>
+    <tasks>
+- **Task 1: Verify backend API endpoints** (AC: #1, #2, #3, #4, #5)
+  - Verify GET /api/clips endpoint exists (COMPLETED in Story 2.1)
+  - Verify GET /api/clips/[id] endpoint exists (COMPLETED in Story 2.1)
+  - Verify pagination implementation (limit, offset params) (COMPLETED in Story 2.1)
+  - Verify difficulty filtering (query param) (COMPLETED in Story 2.1)
+  - Verify response format matches API specification (COMPLETED in Story 2.1)
+  - Verify error handling for not found scenarios (COMPLETED in Story 2.1)
+  - Test API endpoints manually or with integration tests (USER ACTION - requires R2 setup and sample data)
+
+- **Task 2: Create TypeScript types for API responses** (AC: #6)
+  - Create `apps/web/src/types/api.ts` with shared API response types
+  - Define `ClipListResponse` type matching /api/clips response
+  - Define `ClipDetailResponse` type matching /api/clips/[id] response
+  - Define `IClip` interface matching VideoClip Prisma model
+  - Export all types for use in services and components
+
+- **Task 3: Create clips service layer** (AC: #6)
+  - Create `apps/web/src/services/clips.service.ts`
+  - Implement `fetchClips(params)` function for list endpoint
+  - Implement `fetchClipById(id)` function for single clip endpoint
+  - Add proper error handling and type safety
+  - Include fetch configuration (headers, credentials)
+  - Add TypeScript return types for all functions
+
+- **Task 4: Implement TanStack Query hooks** (AC: #7)
+  - Install @tanstack/react-query if not already installed
+  - Create TanStack Query provider in app layout
+  - Create `apps/web/src/hooks/useClips.ts`
+  - Implement `useClips()` hook for fetching clip list with pagination
+  - Implement `useClip(id)` hook for fetching single clip
+  - Configure query keys: `['clips', 'list', params]` and `['clips', 'detail', id]`
+  - Set up background refetch and stale time (5 minutes recommended)
+  - Add error state handling in hooks
+
+- **Task 5: Testing** (All ACs)
+  - Unit test: clips service functions (mock fetch)
+  - Integration test: useClips hook with mock data
+  - Integration test: useClip hook with mock data
+  - E2E test: Verify API integration from frontend (requires R2 setup and sample data)
+  - Test error scenarios: network failure, 404 not found, invalid responses
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+1. **Given** video clips stored in R2 and metadata in database
+   **When** GET /api/clips is called
+   **Then** it returns a paginated list of available clips
+
+2. **And** GET /api/clips/[id] returns single clip with transcript and metadata
+
+3. **And** clips include title, difficulty level, duration, thumbnail URL (CDN URL from R2)
+
+4. **And** API follows the standard response format: `{ success: true, data: {...} }` or `{ success: false, error: {...} }`
+
+5. **And** proper error handling for missing clips (404 with error code CLIP_NOT_FOUND)
+
+6. **And** frontend service layer implements type-safe API calls
+
+7. **And** TanStack Query hooks provide caching and background refetch for clips data
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <!-- Epic 2: Core Dictation Engine -->
+      <doc>
+        <path>docs/epics.md</path>
+        <title>Epic 2: Core Dictation Engine</title>
+        <section>Story 2.2: Create Video Clip Management API</section>
+        <snippet>API endpoints to manage video clips and their metadata. GET /api/clips returns paginated list, GET /api/clips/[id] returns single clip with transcript. Uses TanStack Query for caching.</snippet>
+      </doc>
+
+      <!-- Architecture - API Contracts -->
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Documentation</title>
+        <section>API Contracts - Clips</section>
+        <snippet>GET /api/clips returns { success: true, data: { clips: IClip[], total: number } }. Standard response format with success/error structure.</snippet>
+      </doc>
+
+      <!-- Architecture - Response Format -->
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Documentation</title>
+        <section>Response Format</section>
+        <snippet>SuccessResponse&lt;T&gt; has { success: true, data: T }. ErrorResponse has { success: false, error: { code: string, message: string } }. Error codes follow DOMAIN_ACTION_ERROR pattern.</snippet>
+      </doc>
+
+      <!-- Architecture - State Management -->
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Documentation</title>
+        <section>ADR-005: TanStack Query + Zustand</section>
+        <snippet>Use TanStack Query for server state, Zustand for client state. Clear separation of concerns. Query keys follow [domain, action, ...params] pattern.</snippet>
+      </doc>
+
+      <!-- Story 2.1 - Already Implemented Backend -->
+      <doc>
+        <path>docs/stories/2-1-set-up-video-storage-infrastructure-with-cloudflare-r2.md</path>
+        <title>Story 2.1: Set Up Video Storage Infrastructure</title>
+        <section>Dev Notes - Implementation Status</section>
+        <snippet>Backend API endpoints already completed: GET /api/clips with pagination (limit, offset) and difficulty filtering, GET /api/clips/[id] for single clip, standard response format, error handling with CLIP_NOT_FOUND code.</snippet>
+      </doc>
+    </docs>
+
+    <code>
+      <!-- Existing API Route: List Clips -->
+      <artifact>
+        <path>apps/web/src/app/api/clips/route.ts</path>
+        <kind>api-route</kind>
+        <symbol>GET</symbol>
+        <lines>1-111</lines>
+        <reason>Existing clips list endpoint with pagination, filtering, and standard response format. Story 2.2 creates frontend service layer to consume this API.</reason>
+      </artifact>
+
+      <!-- Existing API Route: Single Clip -->
+      <artifact>
+        <path>apps/web/src/app/api/clips/[id]/route.ts</path>
+        <kind>api-route</kind>
+        <symbol>GET</symbol>
+        <lines>1-85</lines>
+        <reason>Existing single clip endpoint with error handling (CLIP_NOT_FOUND). Frontend hooks will call this to fetch clip details.</reason>
+      </artifact>
+
+      <!-- Prisma Client -->
+      <artifact>
+        <path>apps/web/src/lib/prisma.ts</path>
+        <kind>utility</kind>
+        <symbol>prisma</symbol>
+        <lines>all</lines>
+        <reason>Prisma client singleton used by API routes. Service layer will call API endpoints that use this.</reason>
+      </artifact>
+
+      <!-- Prisma Schema - VideoClip Model -->
+      <artifact>
+        <path>apps/web/prisma/schema.prisma</path>
+        <kind>schema</kind>
+        <symbol>VideoClip</symbol>
+        <lines>26-39</lines>
+        <reason>VideoClip model defines data structure. TypeScript types (IClip) must match this schema with camelCase field names.</reason>
+      </artifact>
+
+      <!-- R2 Client -->
+      <artifact>
+        <path>apps/web/src/lib/r2-client.ts</path>
+        <kind>utility</kind>
+        <symbol>R2Client</symbol>
+        <lines>all</lines>
+        <reason>R2 client for CDN URL generation. clipUrl field in API responses contains R2 public CDN URLs from this utility.</reason>
+      </artifact>
+
+      <!-- Existing Tests: Clips API Integration Tests -->
+      <artifact>
+        <path>tests/integration/api/clips/list.test.ts</path>
+        <kind>test</kind>
+        <symbol>Clips List API Integration Tests</symbol>
+        <lines>all</lines>
+        <reason>Existing integration tests for GET /api/clips. New service layer tests should follow similar patterns for mocking API responses.</reason>
+      </artifact>
+
+      <artifact>
+        <path>tests/integration/api/clips/single.test.ts</path>
+        <kind>test</kind>
+        <symbol>Single Clip API Integration Tests</symbol>
+        <lines>all</lines>
+        <reason>Existing integration tests for GET /api/clips/[id]. Reference for testing error scenarios (404, invalid ID).</reason>
+      </artifact>
+    </code>
+
+    <dependencies>
+      <node>
+        <package>@tanstack/react-query</package>
+        <version>^5.90.7</version>
+        <purpose>Server state management, caching, background refetch for clips data</purpose>
+      </node>
+      <node>
+        <package>zod</package>
+        <version>^4.1.12</version>
+        <purpose>Runtime type validation for API responses (optional but recommended)</purpose>
+      </node>
+      <node>
+        <package>zustand</package>
+        <version>^5.0.8</version>
+        <purpose>Client state management (separate from server state)</purpose>
+      </node>
+      <node>
+        <package>react</package>
+        <version>19.2.0</version>
+        <purpose>React hooks framework for useClips custom hooks</purpose>
+      </node>
+      <node>
+        <package>next</package>
+        <version>16.0.1</version>
+        <purpose>Next.js framework for API routes and app structure</purpose>
+      </node>
+      <node>
+        <package>@prisma/client</package>
+        <version>^6.19.0</version>
+        <purpose>Database client (used indirectly via API routes)</purpose>
+      </node>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <!-- Development Rules from Architecture and Story -->
+    <constraint>Backend API endpoints already exist (Story 2.1). DO NOT modify or recreate them. Focus only on frontend integration.</constraint>
+    <constraint>All API calls must use TypeScript for type safety. Define IClip interface matching VideoClip Prisma model with camelCase field names.</constraint>
+    <constraint>Service layer functions must use async/await pattern and proper error handling (try/catch with typed errors).</constraint>
+    <constraint>TanStack Query configuration: Query keys format ['clips', 'list', params] and ['clips', 'detail', id]. StaleTime: 5 minutes.</constraint>
+    <constraint>Query keys must follow architecture pattern: [domain, action, ...params] for consistency across application.</constraint>
+    <constraint>Error responses must be parsed to extract code and message from { success: false, error: { code, message } } format.</constraint>
+    <constraint>Service layer should be framework-agnostic (pure TypeScript functions, no React dependencies).</constraint>
+    <constraint>Hooks layer (useClips) must handle loading, error, and success states. Expose isLoading, isError, data, error from TanStack Query.</constraint>
+    <constraint>Follow Next.js 15 conventions: use app directory structure, no pages directory.</constraint>
+    <constraint>Testing: Mock fetch in service tests, use TanStack Query test utilities for hook tests.</constraint>
+  </constraints>
+
+  <interfaces>
+    <!-- API Endpoints Already Implemented -->
+    <interface>
+      <name>GET /api/clips</name>
+      <kind>REST</kind>
+      <signature>
+        Query params: limit (number, default 10), offset (number, default 0), difficulty (BEGINNER|INTERMEDIATE|ADVANCED, optional)
+        Response: { success: true, data: { clips: IClip[], pagination: { total, limit, offset, hasMore } } }
+        Error: { success: false, error: { code: string, message: string } }
+      </signature>
+      <path>apps/web/src/app/api/clips/route.ts</path>
+    </interface>
+
+    <interface>
+      <name>GET /api/clips/[id]</name>
+      <kind>REST</kind>
+      <signature>
+        Path params: id (string, cuid)
+        Response: { success: true, data: IClip }
+        Error: { success: false, error: { code: "CLIP_NOT_FOUND" | "CLIP_INVALID_ID" | "CLIP_RETRIEVAL_FAILED", message: string } }
+      </signature>
+      <path>apps/web/src/app/api/clips/[id]/route.ts</path>
+    </interface>
+
+    <!-- TypeScript Interfaces to Create -->
+    <interface>
+      <name>IClip</name>
+      <kind>TypeScript Interface</kind>
+      <signature>
+        {
+          id: string;
+          title: string;
+          description?: string;
+          clipUrl: string;
+          durationSeconds: number;
+          difficultyLevel: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
+          subtitleText: string;
+          difficultyWords?: object;
+          createdAt: string; // ISO 8601
+          updatedAt: string; // ISO 8601
+        }
+      </signature>
+      <path>apps/web/src/types/api.ts (to be created)</path>
+    </interface>
+
+    <interface>
+      <name>ClipListResponse</name>
+      <kind>TypeScript Interface</kind>
+      <signature>
+        {
+          success: true;
+          data: {
+            clips: IClip[];
+            pagination: {
+              total: number;
+              limit: number;
+              offset: number;
+              hasMore: boolean;
+            };
+          }
+        }
+      </signature>
+      <path>apps/web/src/types/api.ts (to be created)</path>
+    </interface>
+
+    <interface>
+      <name>ClipDetailResponse</name>
+      <kind>TypeScript Interface</kind>
+      <signature>
+        {
+          success: true;
+          data: IClip;
+        }
+      </signature>
+      <path>apps/web/src/types/api.ts (to be created)</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Use Vitest for unit tests with @testing-library/react for component/hook testing. Integration tests use @testing-library/react with TanStack Query test utilities (QueryClient, QueryClientProvider wrapper). E2E tests use Playwright. Mock fetch in service tests using global.fetch = vi.fn(). For hook tests, create custom render function with QueryClientProvider. Test both success and error scenarios. Follow AAA pattern (Arrange, Act, Assert).
+    </standards>
+
+    <locations>
+      Unit tests: tests/unit/services/clips.service.test.ts (to be created)
+      Integration tests: tests/integration/hooks/useClips.test.ts (to be created)
+      E2E tests: tests/e2e/clips/ (future, requires R2 setup and sample data)
+      Existing test examples: tests/integration/api/clips/list.test.ts, tests/integration/api/clips/single.test.ts
+    </locations>
+
+    <ideas>
+      <!-- AC #6: Frontend service layer -->
+      <test ac="6" type="unit">Test fetchClips() with valid params returns ClipListResponse with mocked fetch</test>
+      <test ac="6" type="unit">Test fetchClipById() with valid ID returns ClipDetailResponse with mocked fetch</test>
+      <test ac="6" type="unit">Test service error handling: network failure throws error with proper message</test>
+      <test ac="6" type="unit">Test service error handling: HTTP 404 throws error</test>
+      <test ac="6" type="unit">Test service query parameter serialization (limit, offset, difficulty)</test>
+
+      <!-- AC #7: TanStack Query hooks -->
+      <test ac="7" type="integration">Test useClips() hook returns loading state initially</test>
+      <test ac="7" type="integration">Test useClips() hook returns data after successful fetch</test>
+      <test ac="7" type="integration">Test useClips() hook handles error state on API failure</test>
+      <test ac="7" type="integration">Test useClip(id) hook fetches single clip by ID</test>
+      <test ac="7" type="integration">Test query cache key structure matches ['clips', 'list', params] pattern</test>
+      <test ac="7" type="integration">Test background refetch behavior with stale data</test>
+
+      <!-- AC #1-5: API integration (requires R2 and data) -->
+      <test ac="1,2,3,4,5" type="e2e">Test complete flow: fetch clips list → select clip → fetch detail (blocked: requires R2 setup)</test>
+      <test ac="5" type="e2e">Test 404 error handling when clip not found (blocked: requires R2 setup)</test>
+    </ideas>
+  </tests>
+</story-context>

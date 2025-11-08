@@ -8,7 +8,9 @@
       "Bash(npx -y create-next-app@latest friends-dictation --typescript --tailwind --eslint --app --src-dir --import-alias \"@/*\" --no-git --turbopack)",
       "Bash(pnpm install)",
       "Bash(test:*)",
-      "Bash(npx prisma:*)"
+      "Bash(npx prisma:*)",
+      "Bash(npx vitest run:*)",
+      "Bash(pnpm test:*)"
     ],
     "deny": [],
     "ask": []

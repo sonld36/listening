@@ -1,6 +1,8 @@
 # Story 2.1: Set Up Video Storage Infrastructure with Cloudflare R2
 
-Status: review
+Status: in-progress
+
+<!-- NOTE: Story should only be marked "review" after ALL tasks are complete, including user action tasks (R2 setup, Prisma migrations, sample upload). Code implementation alone is not sufficient. -->
 
 ## Story
 
@@ -39,7 +41,7 @@ So that videos can be efficiently streamed to users worldwide.
   - [x] Add R2 credentials to environment variables (access key, secret key, endpoint, bucket name)
   - [x] Test connection to R2 bucket
 
-- [x] **Task 3: Extend Prisma schema with VideoClip model** (AC: #5)
+- [ ] **Task 3: Extend Prisma schema with VideoClip model** (AC: #5)
   - [x] Add VideoClip model to `prisma/schema.prisma` with fields:
     - id (cuid)
     - title (string)
@@ -306,6 +308,11 @@ claude-sonnet-4-5-20250929
 6. Add R2 credentials to .env.local
 7. Prepare sample 10-second Friends TV clip for testing
 
+**Code Review Resolution (2025-11-08):**
+- ✅ Resolved review finding [Med]: Clarified Task 3 completion status by unchecking parent task to reflect incomplete Prisma migration subtasks
+- ✅ Resolved review finding [Med]: Updated story status from "review" to "in-progress" and added guidance note about when to use "review" status
+- All 2 code review action items have been addressed
+
 ### File List
 
 **Created Files:**
@@ -324,3 +331,159 @@ claude-sonnet-4-5-20250929
 - apps/web/prisma/schema.prisma (added VideoClip model and DifficultyLevel enum)
 - apps/web/src/middleware.ts (added /api/clips/upload protection)
 - docs/sprint-status.yaml (updated story status: ready-for-dev → in-progress)
+- docs/stories/2-1-set-up-video-storage-infrastructure-with-cloudflare-r2.md (addressed code review findings, updated status and task checkboxes)
+
+## Change Log
+
+- **2025-11-08**: Addressed code review findings - 2 items resolved (Task 3 completion status clarified, story status guidance added)
+- **2025-11-08**: Updated story status from "review" to "in-progress" to reflect incomplete user action tasks
+
+---
+
+## Senior Developer Review (AI)
+
+**Reviewer:** sonld
+**Date:** 2025-11-08
+**Outcome:** ⚠️ **CHANGES REQUESTED**
+
+**Justification:** While the code implementation is excellent and demonstrates strong technical execution, there is a mismatch between story requirements and what can be considered "done". Multiple acceptance criteria require manual user actions (R2 setup, sample upload) that prevent this story from being fully complete. The implementation is production-ready, but the story cannot be marked "done" until infrastructure setup and end-to-end verification are completed.
+
+### Summary
+
+This story delivers a well-architected video storage infrastructure with Cloudflare R2 integration. The code quality is high, following established patterns and demonstrating comprehensive error handling. However, the story requires manual infrastructure setup steps (R2 bucket creation, CDN configuration) and end-to-end verification (sample clip upload) before it can be considered complete. There is one task inconsistency where Task 3 is marked complete but has pending subtasks.
+
+**Strengths:**
+- Excellent code structure following singleton pattern
+- Comprehensive test coverage (unit + integration)
+- Proper error handling with rollback mechanisms
+- Consistent adherence to architectural patterns
+- Strong input validation with Zod schemas
+
+**Areas Requiring Attention:**
+- Manual infrastructure setup blocking full AC completion
+- Task 3 completion status ambiguity
+- Missing E2E verification with actual sample clip
+
+### Key Findings
+
+**MEDIUM Severity:**
+
+1. **AC1 & AC2 Partial Implementation** - Cloudflare R2 bucket and CDN require manual setup
+   - **Impact:** Story cannot be marked "done" until infrastructure is configured
+   - **Evidence:** Dev Notes document manual steps (lines 240-247), but actual R2 bucket/CDN not created
+   - **Related:** AC#1, AC#2
+
+2. **Task 3 Completion Inconsistency** - Parent task marked complete but critical subtasks pending
+   - **Impact:** Creates ambiguity about database migration status
+   - **Evidence:** Task 3 marked [x] but subtasks "Run prisma generate" and "Run prisma db push" marked [ ] (lines 54-56)
+   - **Related:** AC#5
+   - **Recommendation:** Uncheck Task 3 parent task OR complete Prisma subtasks before marking story for review
+
+3. **AC4 Partial Verification** - Upload/retrieval APIs exist but not end-to-end tested
+   - **Impact:** No confirmation that actual video upload → R2 storage → retrieval works
+   - **Evidence:** Task 6 entirely incomplete (lines 76-82), E2E tests pending (lines 88-90)
+   - **Related:** AC#4
+
+**LOW Severity:**
+
+4. **Missing E2E Tests** - E2E tests require R2 setup
+   - **Impact:** Lower confidence in production deployment
+   - **Evidence:** Task 7 subtasks marked pending (lines 88-90)
+   - **Note:** Correctly documented as USER ACTION required
+
+### Acceptance Criteria Coverage
+
+| AC# | Description | Status | Evidence |
+|-----|-------------|--------|----------|
+| AC1 | R2 bucket created and configured for public access | ⚠️ PARTIAL | r2-client.ts:1-164 (code ready), but manual R2 setup required (Dev Notes:240-247) |
+| AC2 | CDN properly configured for video delivery | ⚠️ PARTIAL | .env.example:19-20 (CDN URL configured), r2-client.ts:74-75 (CDN URL usage), but manual CDN setup required |
+| AC3 | API endpoints can generate signed URLs | ✅ IMPLEMENTED | r2-client.ts:88-101 (generatePresignedUrl method), r2-client.test.ts:153-208 (tests) |
+| AC4 | Sample 10-second clip can be uploaded and retrieved | ⚠️ PARTIAL | upload/route.ts:1-217 (upload API), route.ts:1-111 (list API), [id]/route.ts:1-85 (single API), but no actual sample uploaded (Task 6 incomplete) |
+| AC5 | Video metadata table created in database | ✅ IMPLEMENTED | schema.prisma:26-46 (VideoClip model + DifficultyLevel enum). **NOTE:** Prisma migration pending (Task 3 subtasks) |
+
+**Summary:** 2 of 5 acceptance criteria fully implemented, 3 PARTIAL (requiring manual user actions)
+
+### Task Completion Validation
+
+| Task | Marked As | Verified As | Evidence |
+|------|-----------|-------------|----------|
+| Task 1: R2 bucket setup | ❌ INCOMPLETE | ✅ VERIFIED | 4/5 subtasks correctly marked USER ACTION. Documentation subtask completed (.env.example:13-20) |
+| Task 2: R2 client config | ✅ COMPLETE | ✅ VERIFIED | r2-client.ts:1-164, package.json:17-18, testConnection method exists |
+| Task 3: Prisma schema | ⚠️ **MIXED** | ⚠️ **QUESTIONABLE** | Schema exists (schema.prisma:26-46) but parent marked [x] with 2/3 subtasks [ ]. **INCONSISTENCY** |
+| Task 4: Upload API | ✅ COMPLETE | ✅ VERIFIED | upload/route.ts:1-217, all subtasks implemented with evidence |
+| Task 5: Retrieval APIs | ✅ COMPLETE | ✅ VERIFIED | route.ts:1-111, [id]/route.ts:1-85, pagination + filtering + standard format |
+| Task 6: Sample clip | ❌ INCOMPLETE | ✅ VERIFIED | All subtasks correctly marked USER ACTION |
+| Task 7: Testing | ⚠️ MIXED | ✅ VERIFIED | Unit tests (r2-client.test.ts:1-300), integration tests exist. E2E correctly marked pending |
+
+**Summary:** 2 of 7 tasks fully verified, 3 mixed/questionable, 2 incomplete. 1 inconsistency (Task 3).
+
+### Test Coverage and Gaps
+
+**Strengths:**
+- Comprehensive unit tests for R2 client (300 lines, r2-client.test.ts)
+- Integration tests for upload API covering all error scenarios (316 lines, upload.test.ts)
+- Integration tests for list API with pagination and filtering (240 lines, list.test.ts)
+- Single clip retrieval tests exist (tests/integration/api/clips/single.test.ts)
+
+**Gaps:**
+- **E2E tests pending** - Requires R2 infrastructure setup (correctly noted)
+- **No actual clip upload verification** - Sample 10-second clip upload not performed
+- **CORS testing pending** - Browser video streaming not verified (Task 7, line 90)
+
+### Architectural Alignment
+
+**Excellent Adherence to Architecture:**
+- ✅ Singleton pattern for R2 client (architecture.md ADR-001)
+- ✅ Standard API response format `{ success, data/error }` (route.ts:38-46, 80-95, [id]/route.ts:24-30, 52-58)
+- ✅ Error codes follow `DOMAIN_ACTION_ERROR` pattern (CLIP_NOT_FOUND, CLIP_UPLOAD_FAILED, etc.)
+- ✅ NextAuth middleware protection on upload endpoint (middleware.ts:21)
+- ✅ Prisma snake_case mapping consistent with User model (schema.prisma:30-36)
+- ✅ Environment variable validation on startup (r2-client.ts:19-30)
+- ✅ Zod validation for inputs (upload/route.ts:22-28, route.ts:19-23)
+
+**No Architecture Violations Found**
+
+### Security Notes
+
+**Strengths:**
+- Environment variable validation prevents missing credentials (r2-client.ts:19-30)
+- File validation: type, size, extension (upload/route.ts:48-79)
+- Upload endpoint protected by NextAuth middleware (middleware.ts:21)
+- Input validation with Zod schemas (upload/route.ts:22-28, 90-103)
+- Rollback mechanism on database failure prevents orphaned R2 files (upload/route.ts:186-189)
+- Password/secrets stored in environment variables, not code (.env.example:13-20)
+
+**Recommendations:**
+- ⚠️ Consider rate limiting on upload endpoint for production (mentioned in architecture.md but not implemented)
+- ⚠️ Consider file virus scanning for user-uploaded videos (future enhancement)
+
+### Best Practices and References
+
+**Next.js 15 & React 19:**
+- ✅ Uses App Router pattern (route.ts structure)
+- ✅ Server Components pattern followed
+- ✅ TypeScript strict mode compliance
+
+**AWS SDK for R2:**
+- ✅ Correct S3 SDK v3 usage with modular imports (r2-client.ts:1-2)
+- ✅ Proper error handling for AWS SDK operations (r2-client.ts:76-79, 98-99)
+- Reference: [AWS SDK for JavaScript v3 - S3 Client](https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/clients/client-s3/)
+
+**Prisma ORM:**
+- ✅ Proper schema definition with enum types (schema.prisma:42-46)
+- ✅ Snake_case mapping for database columns (schema.prisma:30-36)
+- Reference: [Prisma Schema Reference](https://www.prisma.io/docs/reference/api-reference/prisma-schema-reference)
+
+### Action Items
+
+**Code Changes Required:**
+
+- [x] [Med] Clarify Task 3 completion status - Either uncheck parent task OR complete Prisma generate/push subtasks [file: docs/stories/2-1-set-up-video-storage-infrastructure-with-cloudflare-r2.md:42-56]
+- [x] [Med] Update story status guidance - Add note that "review" status should only be used after ALL user actions completed, not just code implementation [file: docs/stories/2-1-set-up-video-storage-infrastructure-with-cloudflare-r2.md:3]
+
+**Advisory Notes:**
+
+- Note: Consider adding rate limiting to upload endpoint for production deployment (mentioned in architecture.md Security section)
+- Note: Story should remain in "in-progress" until user actions completed: R2 setup (Task 1), Prisma push (Task 3), sample upload (Task 6)
+- Note: Once infrastructure setup complete, run E2E tests (Task 7) to verify end-to-end flow before marking "done"
+- Note: Excellent code quality - implementation is production-ready once infrastructure configured
