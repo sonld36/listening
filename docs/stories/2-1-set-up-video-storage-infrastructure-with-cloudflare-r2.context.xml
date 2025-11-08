@@ -1,0 +1,304 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>2</epicId>
+    <storyId>1</storyId>
+    <title>Set Up Video Storage Infrastructure with Cloudflare R2</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-08</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/stories/2-1-set-up-video-storage-infrastructure-with-cloudflare-r2.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>a developer</asA>
+    <iWant>video clips stored in Cloudflare R2 with CDN delivery configured</iWant>
+    <soThat>videos can be efficiently streamed to users worldwide</soThat>
+    <tasks>
+- Task 1: Create and configure Cloudflare R2 bucket
+  - Create Cloudflare R2 account if not exists
+  - Create new R2 bucket for video storage (friends-dictation-videos)
+  - Configure bucket for public read access
+  - Enable CORS for video streaming
+  - Document bucket name and region in .env.example
+
+- Task 2: Configure R2 client in application
+  - Install AWS SDK S3 client (@aws-sdk/client-s3, @aws-sdk/s3-request-presigner)
+  - Create R2 client utility at apps/web/src/lib/r2-client.ts
+  - Configure S3 client with R2 endpoint and credentials
+  - Implement presigned URL generation function
+  - Add R2 credentials to environment variables
+  - Test connection to R2 bucket
+
+- Task 3: Extend Prisma schema with VideoClip model
+  - Add VideoClip model to prisma/schema.prisma with fields (id, title, description, clip_url, duration_seconds, difficulty_level, subtitle_text, difficulty_words, created_at, updated_at)
+  - Run prisma generate to update Prisma Client types
+  - Run prisma db push to create table in database
+  - Verify VideoClip table exists in database
+
+- Task 4: Create video upload API endpoint
+  - Create API route at /api/clips/upload/route.ts
+  - Implement multipart form data handling
+  - Add file validation (mp4/webm, max 5MB, max 10 seconds)
+  - Upload video file to R2 bucket with unique filename
+  - Generate public CDN URL
+  - Store video metadata in database
+  - Return success response with clip metadata
+  - Implement error handling
+
+- Task 5: Create video retrieval API endpoints
+  - Create GET /api/clips/route.ts to list all clips
+  - Implement pagination support (limit, offset)
+  - Add filtering by difficulty_level
+  - Create GET /api/clips/[id]/route.ts for single clip
+  - Include CDN URL in response
+  - Follow standard API response format
+
+- Task 6: Upload and verify sample clip
+  - Prepare sample 10-second Friends TV clip
+  - Use upload API to upload sample clip
+  - Add subtitle text and metadata
+  - Verify clip accessible via CDN URL
+  - Test video playback in browser
+  - Verify metadata stored correctly in database
+
+- Task 7: Testing
+  - Unit test R2 client utility functions
+  - Integration test upload API endpoint with mock R2
+  - Integration test clips retrieval API endpoints
+  - E2E test upload and retrieve via API
+  - E2E test CDN delivery and video playback
+  - Test CORS configuration
+  - Test error handling for invalid uploads
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+1. Given the need for video storage, when the infrastructure is configured, then Cloudflare R2 bucket is created and configured for public access
+
+2. And CDN is properly configured for video delivery
+
+3. And API endpoints can generate signed URLs for video access
+
+4. And a sample 10-second clip can be uploaded and retrieved
+
+5. And video metadata table is created in database (clip_id, filename, transcript, difficulty_words)
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document</title>
+        <section>FR1 - Video Hosting and Streaming</section>
+        <snippet>System must host and stream a collection of 10-second Friends TV clips to users</snippet>
+      </doc>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document</title>
+        <section>NFR3 - Pre-processed Content</section>
+        <snippet>Video content (10-second clips) and subtitles must be pre-processed and stored server-side, possibly via CDN for optimal speed</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>Technology Stack - Video Storage</section>
+        <snippet>Cloudflare R2 (Latest) for cost-effective video storage with CDN included</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>API Patterns - Endpoint Naming and Response Format</section>
+        <snippet>Use plural nouns (/api/clips), [id] for dynamic routes. Success: {success: true, data: T}, Error: {success: false, error: {code, message}}</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>Error Handling - API Error Codes</section>
+        <snippet>Format: DOMAIN_ACTION_ERROR. Examples: CLIP_NOT_FOUND, CLIP_UPLOAD_FAILED</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>Data Architecture - VideoClip Model</section>
+        <snippet>VideoClip: id (cuid), title, description, clip_url (R2 URL), duration_seconds (always 10), difficulty_level, subtitle_text</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture/architecture-decision-records-adrs.md</path>
+        <title>Architecture Decision Records</title>
+        <section>ADR-003: Cloudflare R2 for Video Storage</section>
+        <snippet>Decision: Use Cloudflare R2 instead of AWS S3. Rationale: Cost-effective (10GB free), includes CDN, minimal configuration</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture/data-architecture.md</path>
+        <title>Data Architecture</title>
+        <section>Core Models - VideoClip</section>
+        <snippet>VideoClip: id, title, description, clip_url (R2 URL), duration_seconds (always 10), difficulty_level, subtitle_text. Relationships: VideoClip 1:N UserProgress, VideoClip 1:N UserFlashcard</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture/security-architecture.md</path>
+        <title>Security Architecture</title>
+        <section>API Security</section>
+        <snippet>API routes require authentication (except public clips list), CORS configured for production domain only, Input validation with Zod schemas</snippet>
+      </doc>
+      <doc>
+        <path>docs/epics.md</path>
+        <title>Epic Stories</title>
+        <section>Epic 2: Core Dictation Engine - Story 2.1</section>
+        <snippet>Set up video storage infrastructure with Cloudflare R2. Build infrastructure for video storage, CDN delivery, and API endpoints for upload/retrieval. Foundation for all video-related features</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>apps/web/src/middleware.ts</path>
+        <kind>middleware</kind>
+        <symbol>withAuth</symbol>
+        <lines>1-22</lines>
+        <reason>Authentication middleware pattern - extend to protect /api/clips/upload endpoint</reason>
+      </artifact>
+      <artifact>
+        <path>apps/web/prisma/schema.prisma</path>
+        <kind>schema</kind>
+        <symbol>User model</symbol>
+        <lines>14-23</lines>
+        <reason>Existing Prisma schema - extend with VideoClip model following same snake_case mapping pattern</reason>
+      </artifact>
+      <artifact>
+        <path>apps/web/src/lib/prisma.ts</path>
+        <kind>utility</kind>
+        <symbol>prisma singleton</symbol>
+        <lines>1-22</lines>
+        <reason>Prisma client singleton pattern - reuse for VideoClip CRUD operations</reason>
+      </artifact>
+      <artifact>
+        <path>apps/web/src/app/api/health/route.ts</path>
+        <kind>api-route</kind>
+        <symbol>GET handler</symbol>
+        <lines>12-43</lines>
+        <reason>Reference for standard API response format and error handling pattern</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <node>
+        <existing>
+          <package name="@aws-sdk/client-s3" version="3.922.0" />
+          <package name="@prisma/client" version="6.19.0" />
+          <package name="next-auth" version="4.24.13" />
+          <package name="zod" version="4.1.12" />
+          <package name="next" version="16.0.1" />
+        </existing>
+        <required>
+          <package name="@aws-sdk/s3-request-presigner" version="latest" />
+        </required>
+      </node>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint>Extend existing Prisma schema at apps/web/prisma/schema.prisma - do not create new schema file</constraint>
+    <constraint>Follow snake_case mapping pattern for database tables and columns (e.g., @map("video_clips"))</constraint>
+    <constraint>Use standard API response format: {success: true, data: T} or {success: false, error: {code, message}}</constraint>
+    <constraint>API endpoint naming: Use plural nouns (/api/clips) and [id] for dynamic routes</constraint>
+    <constraint>Error codes follow DOMAIN_ACTION_ERROR format (e.g., CLIP_UPLOAD_FAILED, CLIP_NOT_FOUND)</constraint>
+    <constraint>Environment variables for R2 credentials - never hardcode secrets</constraint>
+    <constraint>Upload endpoint must require authentication via NextAuth middleware</constraint>
+    <constraint>File validation required: type (mp4/webm), max size (5MB), max duration (10 seconds)</constraint>
+    <constraint>R2 client should be singleton pattern similar to Prisma client</constraint>
+    <constraint>Use Zod for input validation schemas</constraint>
+    <constraint>CORS must be configured for video streaming from browser</constraint>
+    <constraint>Public read access for R2 bucket, authenticated write access only</constraint>
+  </constraints>
+  <interfaces>
+    <interface>
+      <name>API Response Format</name>
+      <kind>TypeScript Interface</kind>
+      <signature>
+interface SuccessResponse&lt;T&gt; { success: true; data: T; }
+interface ErrorResponse { success: false; error: { code: string; message: string; }; }
+      </signature>
+      <path>docs/architecture.md</path>
+    </interface>
+    <interface>
+      <name>GET /api/clips</name>
+      <kind>REST Endpoint</kind>
+      <signature>GET /api/clips?limit=10&amp;offset=0&amp;difficulty=BEGINNER - Returns paginated list of video clips</signature>
+      <path>To be created: apps/web/src/app/api/clips/route.ts</path>
+    </interface>
+    <interface>
+      <name>GET /api/clips/[id]</name>
+      <kind>REST Endpoint</kind>
+      <signature>GET /api/clips/[id] - Returns single clip with CDN URL</signature>
+      <path>To be created: apps/web/src/app/api/clips/[id]/route.ts</path>
+    </interface>
+    <interface>
+      <name>POST /api/clips/upload</name>
+      <kind>REST Endpoint</kind>
+      <signature>POST /api/clips/upload (multipart/form-data) - Uploads video, returns clip metadata. Requires authentication.</signature>
+      <path>To be created: apps/web/src/app/api/clips/upload/route.ts</path>
+    </interface>
+    <interface>
+      <name>R2Client utility</name>
+      <kind>Service Class</kind>
+      <signature>
+class R2Client {
+  uploadFile(file: File): Promise&lt;string&gt;;
+  generatePresignedUrl(key: string): Promise&lt;string&gt;;
+  deleteFile(key: string): Promise&lt;void&gt;;
+}
+      </signature>
+      <path>To be created: apps/web/src/lib/r2-client.ts</path>
+    </interface>
+    <interface>
+      <name>VideoClip Prisma Model</name>
+      <kind>Prisma Schema</kind>
+      <signature>
+model VideoClip {
+  id               String   @id @default(cuid())
+  title            String
+  description      String?
+  clipUrl          String   @map("clip_url")
+  durationSeconds  Int      @default(10) @map("duration_seconds")
+  difficultyLevel  DifficultyLevel @map("difficulty_level")
+  subtitleText     String   @map("subtitle_text") @db.Text
+  difficultyWords  Json?    @map("difficulty_words")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+  @@map("video_clips")
+}
+
+enum DifficultyLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+      </signature>
+      <path>To be added: apps/web/prisma/schema.prisma</path>
+    </interface>
+  </interfaces>
+  <tests>
+    <standards>Use Vitest for unit tests and Playwright for E2E tests. Mock external services (R2 SDK) for isolated testing. Follow AAA pattern (Arrange-Act-Assert). Place unit tests in __tests__/ directories colocated with source files. E2E tests in apps/web/e2e/ directory. Test files use .test.ts or .spec.ts extension.</standards>
+    <locations>
+      <location>apps/web/src/lib/__tests__/r2-client.test.ts</location>
+      <location>apps/web/src/app/api/clips/__tests__/route.test.ts</location>
+      <location>apps/web/src/app/api/clips/upload/__tests__/route.test.ts</location>
+      <location>apps/web/src/app/api/clips/[id]/__tests__/route.test.ts</location>
+      <location>apps/web/e2e/video-upload.spec.ts</location>
+    </locations>
+    <ideas>
+      <idea ac="1,2">Unit test R2 client initialization with environment variables</idea>
+      <idea ac="1">Unit test R2 client uploadFile function with mock S3 SDK</idea>
+      <idea ac="3">Unit test generatePresignedUrl function</idea>
+      <idea ac="4">Integration test POST /api/clips/upload with mock R2 client and valid file</idea>
+      <idea ac="4">Integration test upload endpoint with invalid file type (reject non-video)</idea>
+      <idea ac="4">Integration test upload endpoint with file too large (reject &gt;5MB)</idea>
+      <idea ac="4">Integration test upload endpoint without authentication (reject 401)</idea>
+      <idea ac="4,5">Integration test upload success creates VideoClip record in database</idea>
+      <idea ac="4">Integration test GET /api/clips returns paginated list</idea>
+      <idea ac="4">Integration test GET /api/clips with difficulty filter</idea>
+      <idea ac="4">Integration test GET /api/clips/[id] returns single clip with CDN URL</idea>
+      <idea ac="4">Integration test GET /api/clips/[id] with invalid ID returns 404</idea>
+      <idea ac="2">E2E test CORS configuration allows video streaming in browser</idea>
+      <idea ac="4">E2E test complete upload flow: login → upload → verify in database → retrieve via API</idea>
+      <idea ac="2,4">E2E test CDN delivery: upload clip → access public URL → verify video streams</idea>
+    </ideas>
+  </tests>
+</story-context>

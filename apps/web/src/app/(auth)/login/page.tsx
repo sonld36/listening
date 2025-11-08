@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import Link from 'next/link';
 import { LoginForm } from '@/components/auth/LoginForm';
 
@@ -37,12 +38,14 @@ export default function LoginPage({ searchParams }: LoginPageProps) {
 
         {/* Login Form */}
         <div className="bg-white py-8 px-6 shadow rounded-lg">
-          <LoginForm />
+          <Suspense fallback={<div>Loading...</div>}>
+            <LoginForm />
+          </Suspense>
 
           {/* Link to Signup */}
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-600">
-              Don't have an account?{' '}
+              Don&apos;t have an account?{' '}
               <Link
                 href="/signup"
                 className="font-medium text-blue-600 hover:text-blue-500"

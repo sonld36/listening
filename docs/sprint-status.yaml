@@ -47,7 +47,7 @@ development_status:
 
   # Epic 2: Core Dictation Engine
   epic-2: backlog
-  2-1-set-up-video-storage-infrastructure-with-cloudflare-r2: backlog
+  2-1-set-up-video-storage-infrastructure-with-cloudflare-r2: review
   2-2-create-video-clip-management-api: backlog
   2-3-implement-video-player-with-controls: backlog
   2-4-build-dictation-input-interface: backlog

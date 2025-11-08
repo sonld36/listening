@@ -21,3 +21,26 @@ model User {
 
   @@map("users")
 }
+
+// VideoClip model for 10-second Friends TV clips
+model VideoClip {
+  id              String          @id @default(cuid())
+  title           String
+  description     String?
+  clipUrl         String          @map("clip_url")
+  durationSeconds Int             @default(10) @map("duration_seconds")
+  difficultyLevel DifficultyLevel @map("difficulty_level")
+  subtitleText    String          @map("subtitle_text") @db.Text
+  difficultyWords Json?           @map("difficulty_words")
+  createdAt       DateTime        @default(now()) @map("created_at")
+  updatedAt       DateTime        @updatedAt @map("updated_at")
+
+  @@map("video_clips")
+}
+
+// Difficulty level enum for video clips
+enum DifficultyLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
